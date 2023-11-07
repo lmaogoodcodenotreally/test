@@ -1,39 +1,95 @@
 <!DOCTYPE html>
 <html>
-<head>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/openplayerjs@latest/dist/openplayer.min.css" />
-</head>
-<body>
-    <h1>MEGA Downloader</h1>
-    
-    <form id="megaForm">
-        <label for="megaURL">MEGA URL:</label>
-        <input type="text" id="megaURL" name="megaURL">
-        <input type="submit" value="Download">
-    </form>
+  <head>
+    <title>Mega.nz Video Player</title>
+  </head>
+  <body>
+    <video id="videoPlayer" controls></video>
 
-    <video class="op-player op-player__media" controls playsinline>
-        <source id="videoSource" type="video/mp4" />
-        <track kind="subtitles" src="/path/to/video.vtt" srclang="en" label="English" />
-    </video>
-
-    <script src="https://cdn.jsdelivr.net/npm/openplayerjs@latest/dist/openplayer.min.js"></script>
     <script>
-        document.getElementById("megaForm").addEventListener("submit", function(event) {
-            event.preventDefault();
-            var megaURL = document.getElementById("megaURL").value;
+      // URL variable with the Mega.nz URL
+      const URL = "https://mega.nz/file/YzFw2QqI#w9db9aFP918x2fRGBEKCA-jJjf53Z0hpR95HuqIGTNs";
 
-            // Assuming you have the 'file_url' variable from your shell script
-            var fileURL = "https://mega.nz/file/YzFw2QqI#w9db9aFP918x2fRGBEKCA-jJjf53Z0hpR95HuqIGTNs"; // Replace with your actual file URL
+      // The script content goes here
+      URL=""
 
-            // Set the video source dynamically
-            var videoSource = document.getElementById('videoSource');
-            videoSource.src = fileURL;
+      if (URL.match(/^https?:\/\/mega(\.co)?\.nz/)) {
+        URL = URL;
+      }
 
-            // Reload the player to apply the changes
-            var videoPlayer = new OpenPlayer('.op-player');
-            videoPlayer.init();
-        });
+      if (!URL) {
+        console.error("Usage: ${0##*/} url");
+        exit(1);
+      }
+
+      const CURL = "curl -Y 1 -y 10";
+
+      let missing = false;
+      const requiredCommands = ["openssl"];
+      for (const cmd of requiredCommands) {
+        if (!which(cmd)) {
+          missing = true;
+          console.error("${0##*/}: ${cmd}: command not found");
+        }
+      }
+      if (missing) {
+        exit(1);
+      }
+
+      let id, key;
+      if (URL.match(/\/file\/[^#]*#[^#]*/)) {
+        id = URL.split("file/")[1].split("#")[0];
+        key = URL.split("file/")[1].split("#")[1];
+      } else {
+        id = URL.split("!")[1];
+        key = URL.split("!")[2];
+      }
+
+      const raw_hex = atob(key.replace(/-/g, "+").replace(/_/g, "/").replace(/,/g, "")).split("").map(c => c.charCodeAt(0).toString(16).padStart(2, "0")).join("");
+      const hex = String.raw`0x${(parseInt(raw_hex.slice(0, 16), 16) ^ parseInt(raw_hex.slice(32, 48), 16)).toString(16).padStart(16, "0")}${(parseInt(raw_hex.slice(16, 32), 16) ^ parseInt(raw_hex.slice(48, 64), 16)).toString(16).padStart(16, "0")}`;
+
+      const json = JSON.parse(runCommand(`${CURL} -s -H 'Content-Type: application/json' -d '[{"a":"g", "g":"1", "p":"${id}"}]' 'https://g.api.mega.co.nz/cs?id=&ak='`));
+      const file_url = json[0].g;
+
+      const at = JSON.parse(runCommand(`${CURL} -s -H 'Content-Type: application/json' -d '[{"a":"g", "p":"${id}"}]' 'https://g.api.mega.co.nz/cs?id=&ak='`)).at;
+
+      const jsonDecoded = JSON.parse(decryptBase64UrlSafe(at, hex));
+
+      let file_name = jsonDecoded.n;
+      if (file_name.includes(",")) {
+        file_name = file_name.split(",")[0];
+      }
+
+      console.log("Video URL:", file_url);
+      console.log("File Name:", file_name);
+
+      // Create a video element and set the source URL
+      const videoPlayer = document.getElementById("videoPlayer");
+      const source = document.createElement("source");
+      source.src = file_url;
+      source.type = "video/mp4";
+
+      // Add the source to the video player
+      videoPlayer.appendChild(source);
+
+      // Set the video player controls and display the video
+      videoPlayer.controls = true;
+
+      function runCommand(command) {
+        // Replace this function with your preferred method of running shell commands from JavaScript
+        // For example, you can use Node.js child_process.execSync or AJAX to execute the command and retrieve the output
+        // This is just a placeholder implementation
+        console.log("Running command:", command);
+        return "Placeholder command output";
+      }
+
+      function decryptBase64UrlSafe(at, hex) {
+        // Replace this function with your preferred method of decrypting the base64 URL-safe string
+        // For example, you can use a JavaScript cryptography library like CryptoJS or Web Crypto API
+        // This is just a placeholder implementation
+        console.log("Decrypting:", at);
+        return "Placeholder decrypted output";
+      }
     </script>
-</body>
+  </body>
 </html>
