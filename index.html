@@ -75,21 +75,35 @@
       // Set the video player controls and display the video
       videoPlayer.controls = true;
 
+      // Alternative implementation of runCommand using fetch
       function runCommand(command) {
-        // Replace this function with your preferred method of running shell commands from JavaScript
-        // For example, you can use Node.js child_process.execSync or AJAX to execute the command and retrieve the output
-        // This is just a placeholder implementation
-        console.log("Running command:", command);
-        return "Placeholder command output";
+        return fetch("/run-command", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ command }),
+        })
+          .then(response => response.text())
+          .then(output => {
+            console.log("Running command:", command);
+            console.log("Command output:", output);
+            return output;
+          })
+          .catch(error => {
+            console.error("Error running command:", command);
+            console.error(error);
+            return "";
+          });
       }
 
-      function decryptBase64UrlSafe(at, hex) {
-        // Replace this function with your preferred method of decrypting the base64 URL-safe string
-        // For example, you can use a JavaScript cryptography library like CryptoJS or Web Crypto API
-        // This is just a placeholder implementation
-        console.log("Decrypting:", at);
-        return "Placeholder decrypted output";
-      }
-    </script>
-  </body>
-</html>
+      // Alternative implementation of decryptBase64UrlSafe using CryptoJS
+function decryptBase64UrlSafe(at, hex) {
+  const key = CryptoJS.enc.Hex.parse(hex);
+  const iv = CryptoJS.enc.Hex.parse("00000000000000000000000000000000");
+  const ciphertext = CryptoJS.enc.Base64.parse(at);
+  const decrypted = CryptoJS.AES.decrypt({ ciphertext }, key, { iv });
+  const decryptedText = decrypted.toString(CryptoJS.enc.Utf8);
+
+  console.log("Decrypting:", at);
+  console.log("Decrypted output:", decryptedText);
+  return decryptedText;
+}
