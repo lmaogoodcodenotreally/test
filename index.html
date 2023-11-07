@@ -1,12 +1,39 @@
+<!DOCTYPE html>
 <html>
-    <head>
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/openplayerjs@latest/dist/openplayer.min.css" />
-    </head>
-    <body>
-        <video class="op-player op-player__media" controls playsinline>
-            <source src="https://mega.nz/file/YzFw2QqI#w9db9aFP918x2fRGBEKCA-jJjf53Z0hpR95HuqIGTNs4" type="video/mp4" />
-            <track kind="subtitles" src="/path/to/video.vtt" srclang="en" label="English" />
-        </video>
-        <script src="https://cdn.jsdelivr.net/npm/openplayerjs@latest/dist/openplayer.min.js"></script>
-    </body>
+<head>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/openplayerjs@latest/dist/openplayer.min.css" />
+</head>
+<body>
+    <h1>MEGA Downloader</h1>
+    
+    <form id="megaForm">
+        <label for="megaURL">MEGA URL:</label>
+        <input type="text" id="megaURL" name="megaURL">
+        <input type="submit" value="Download">
+    </form>
+
+    <video class="op-player op-player__media" controls playsinline>
+        <source id="videoSource" type="video/mp4" />
+        <track kind="subtitles" src="/path/to/video.vtt" srclang="en" label="English" />
+    </video>
+
+    <script src="https://cdn.jsdelivr.net/npm/openplayerjs@latest/dist/openplayer.min.js"></script>
+    <script>
+        document.getElementById("megaForm").addEventListener("submit", function(event) {
+            event.preventDefault();
+            var megaURL = document.getElementById("megaURL").value;
+
+            // Assuming you have the 'file_url' variable from your shell script
+            var fileURL = "https://mega.nz/file/YzFw2QqI#w9db9aFP918x2fRGBEKCA-jJjf53Z0hpR95HuqIGTNs"; // Replace with your actual file URL
+
+            // Set the video source dynamically
+            var videoSource = document.getElementById('videoSource');
+            videoSource.src = fileURL;
+
+            // Reload the player to apply the changes
+            var videoPlayer = new OpenPlayer('.op-player');
+            videoPlayer.init();
+        });
+    </script>
+</body>
 </html>
